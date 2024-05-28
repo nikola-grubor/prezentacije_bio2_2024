@@ -1,0 +1,299 @@
+---
+title: "Bioinformatika i mašinsko učenje"
+date: last-modified
+author: "Dr Nikola Grubor"
+# institute: "Institut za Medicinsku Statistiku i Informatiku"
+logo: "slike/logo.png"
+lang: sr-Latn
+
+format:
+  revealjs:
+    slide-number: true
+    show-slide-number: speaker
+    theme: [default, custom.scss]
+
+revealjs-plugins:
+  - revealjs-text-resizer
+---
+
+```{r}
+library(glue)
+library(tidyverse)
+library(tinytable)
+library(palmerpenguins)
+
+theme_quarto <- function(x) format_tt(x, quarto = TRUE)
+options(tinytable_tt_theme = NULL)
+```
+
+## Šta je model?
+
+:::: columns
+
+::: {.column}
+![](slike/model.jpg)
+$y = \alpha + \beta x$
+:::
+
+::: {.column }
+![](slike/reality.jpg)
+$y = \text{komplikovano...}$
+:::
+
+::::
+
+## Statistički testovi su modeli
+
+:::: columns
+
+::: {.column}
+- Statistički testovi su specijalizovani za određena istraživačka pitanja
+- Imaju svoje pretpostavke o svetu
+- Naučnici često nisu svesni tih pretpostavki
+:::
+
+::: {.column}
+![](slike/statflow.jpg)
+:::
+::::
+
+## 
+
+![](slike/mars.jpg){fig-align="center"}
+
+## 
+
+![](slike/marspuzzle.png){fig-align="center"}
+
+##
+
+![](slike/geocentric.gif)
+
+## Hipoteze nisu modeli
+
+![](slike/hypothesis.png){fig-align="center"}
+
+::: {.notes}
+
+:::
+
+## Predikcija i klasifikacija
+
+- Predikcija je opštiji problem
+- Klasifikacija je predviđanje kategorije
+
+![](slike/cells.png)
+
+## Vrste mašinskog učenja
+
+- Nadgledano učenje
+- Učenje potkrepljivanjem
+- Nenadgledano učenje
+
+
+
+## Preprilagođavanje i potprilagođavanje
+
+```{r}
+bill_len_dep <- ggplot(data = penguins,
+                         aes(x = bill_length_mm,
+                             y = bill_depth_mm,
+                             group = species)) +
+  geom_point(aes(color = species, 
+                 shape = species),
+             size = 3,
+             alpha = 0.8) +
+  geom_smooth(method = "lm", se = FALSE, aes(color = species)) +
+  scale_color_manual(values = c("darkorange","purple","cyan4")) +
+  labs(title = "Penguin bill dimensions",
+       subtitle = "Bill length and depth for Adelie, Chinstrap and Gentoo Penguins at Palmer Station LTER",
+       x = "Bill length (mm)",
+       y = "Bill depth (mm)",
+       color = "Penguin species",
+       shape = "Penguin species") +
+  theme(legend.position = c(0.85, 0.15),
+        plot.title.position = "plot",
+        plot.caption = element_text(hjust = 0, face= "italic"),
+        plot.caption.position = "plot")
+
+bill_len_dep_s <- ggplot(data = penguins,
+                         aes(x = bill_length_mm,
+                             y = bill_depth_mm,
+                             group = species)) +
+  geom_point(aes(color = species, 
+                 shape = species),
+             size = 3,
+             alpha = 0.8) +
+  geom_smooth(se = FALSE, aes(color = species), formula = y ~ poly(x, 1)) +
+  scale_color_manual(values = c("darkorange","purple","cyan4")) +
+  labs(title = "Penguin bill dimensions",
+       subtitle = "Bill length and depth for Adelie, Chinstrap and Gentoo Penguins at Palmer Station LTER",
+       x = "Bill length (mm)",
+       y = "Bill depth (mm)",
+       color = "Penguin species",
+       shape = "Penguin species") +
+  theme(legend.position = c(0.85, 0.15),
+        plot.title.position = "plot",
+        plot.caption = element_text(hjust = 0, face= "italic"),
+        plot.caption.position = "plot")
+```
+
+::: {.r-stack}
+
+```{r}
+bill_len_dep
+```
+
+::: {.fragment}
+
+```{r}
+bill_len_dep_s
+```
+
+:::
+
+:::
+
+## Nagodba između sistematskog odstupanja i varijanse
+
+![](slike/biasvar.png){fig-align="center"}
+
+## Regularizacija
+
+- Borba protiv kompleksnosti
+
+![](slike/reg.png)
+
+## Evaluacija modela
+
+![](slike/largecorss.png)
+
+## Unakrsna validacija pri maloj količini podataka
+
+![](slike/cross.png){fig-align="center"}
+
+# Primer mašinskog učenja
+
+![](slike/rf.jpg){fig-align="center"}
+
+## Posit Cloud
+![](slike/posit.png)
+[Posit Cloud Link](https://posit.cloud)
+
+## Učitavanje paketa
+
+```{r}
+#| echo: true
+#| code-line-numbers: "|1-4|6-9"
+# install.packages("randomForest")
+# install.packages("palmerpenguins")
+# install.packages("ggplot2")
+# install.packages("caret")
+
+library(palmerpenguins)
+library(randomForest)
+library(ggplot2)
+library(caret)
+```
+
+## Podaci
+
+```{r}
+#| echo: true
+#| code-line-numbers: "4"
+
+head(penguins, 4)
+
+penguins <- penguins |> na.omit()
+head(penguins, 4)
+```
+
+## Vizualizacija (1)
+
+```{r}
+#| layout-align: center
+mass_flipper <- ggplot(data = penguins, 
+                       aes(x = flipper_length_mm,
+                           y = body_mass_g)) +
+  geom_point(aes(color = species, 
+                 shape = species),
+             size = 3,
+             alpha = 0.8) +
+  scale_color_manual(values = c("darkorange","purple","cyan4")) +
+  labs(title = "Penguin size, Palmer Station LTER",
+       subtitle = "Flipper length and body mass for Adelie, Chinstrap and Gentoo Penguins",
+       x = "Flipper length (mm)",
+       y = "Body mass (g)",
+       color = "Penguin species",
+       shape = "Penguin species") +
+  theme(legend.position = c(0.2, 0.7),
+        plot.title.position = "plot",
+        plot.caption = element_text(hjust = 0, face= "italic"),
+        plot.caption.position = "plot")
+
+mass_flipper
+```
+
+## Vizualizacija (2)
+
+```{r}
+#| layout-align: center
+flipper_bill <- ggplot(data = penguins,
+                       aes(x = flipper_length_mm,
+                           y = bill_length_mm)) +
+  geom_point(aes(color = species, 
+                 shape = species),
+             size = 3,
+             alpha = 0.8) +
+  scale_color_manual(values = c("darkorange","purple","cyan4")) +
+  labs(title = "Flipper and bill length",
+       subtitle = "Dimensions for Adelie, Chinstrap and Gentoo Penguins at Palmer Station LTER",
+       x = "Flipper length (mm)",
+       y = "Bill length (mm)",
+       color = "Penguin species",
+       shape = "Penguin species") +
+  theme(legend.position = c(0.85, 0.15),
+        plot.title.position = "plot",
+        plot.caption = element_text(hjust = 0, face= "italic"),
+        plot.caption.position = "plot")
+
+flipper_bill
+```
+
+## Trening i test set
+
+```{.r}
+penguins$ind <- sample(2, size = nrow(penguins), 
+                       prob = c(0.75, 0.25), 
+                       replace = TRUE)
+
+# razdvajanje po indikatoru
+train <- penguins[penguins$ind == 1, ]
+test <- penguins[penguins$ind == 2, ]
+```
+
+
+## Random Forest
+
+```{.r}
+rf_res <- randomForest(species ~ . -island -ind, data = train)
+
+print(rf_res) 
+plot(rf_res)
+
+varImpPlot(rf_res)
+```
+
+## Evaluacija
+
+```{.r}
+# Predikcije na trening setu
+pred_train <- predict(rf_res, train)
+confusionMatrix(pred_train, train$species)
+
+# Predikcije na test setu
+pred_test <- predict(rf_res, test)
+confusionMatrix(pred_test, test$species)
+
+```
+
